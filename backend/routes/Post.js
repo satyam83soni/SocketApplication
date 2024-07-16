@@ -1,12 +1,12 @@
-const express = require("express");
-const {
+import express from "express"
+import  {
   deletePostById,
   getAllPostById,
   likeUnlikePost,
   createPost,
   comment,
   getFeedPost,
-} = require("../controller/Post");
+} from "../controller/Post.js";
 
 const router = express.Router();
 
@@ -18,4 +18,4 @@ router
   .patch('/comment/:id' , comment)
   .get('feed'  , getFeedPost);
 
-exports.router = router;
+export default router;

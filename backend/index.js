@@ -1,15 +1,17 @@
-require("dotenv").config();
-const express = require("express");
+
+import express from "express"
+import dotenv from "dotenv";
 const server = express();
-const cors = require("cors");
-const mongoose = require("mongoose");
-const UserRouter = require("./routes/User");
-const cookieParser = require("cookie-parser");
-const AuthRouter = require("./routes/Auth");
-const { User } = require("./model/User");
-const PostRouter = require("./routes/Post");
-const jwt = require("jsonwebtoken");
-// const isAuth = require("./utils/Protected")
+import cors from "cors"
+dotenv.config()
+import mongoose  from "mongoose"; 
+import UserRouter from "./routes/User.js"
+import cookieParser from "cookie-parser"
+import AuthRouter  from "./routes/Auth.js";
+import User from "./model/User.js"
+import PostRouter from "./routes/Post.js"
+import jwt from "jsonwebtoken"
+import { createUser } from "./controller/Auth.js";
 
 //middleware
 const cookieExtractor = (req) => {
@@ -50,16 +52,18 @@ server.use(cors());
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 server.use(cookieParser());
-server.use("/auth", AuthRouter.router);
-server.use("/user", isAuth, UserRouter.router);
-server.use("/post", isAuth, PostRouter.router);
+
+
+server.use("/auth"  ,AuthRouter);
+server.use("/user", isAuth, UserRouter);
+server.use("/post", isAuth, PostRouter);
 
 main().catch((err) => console.log(err));
 async function main() {
-  await mongoose.connect(process.env.MONGODB_URL);
+  await mongoose.connect("mongodb://localhost:27017/Thread");
   console.log("database connected");
 }
 
-server.listen(process.env.PORT, () => {
+server.listen(8080, () => {
   console.log("server started");
 });

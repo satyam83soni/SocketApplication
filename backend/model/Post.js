@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
@@ -36,4 +36,5 @@ postSchema.set("toJSON", {
   },
 });
 
-exports.Post = mongoose.model("Post", postSchema);
+const Post = mongoose.model("Post", postSchema);
+export default Post;

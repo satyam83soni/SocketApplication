@@ -1,6 +1,7 @@
-const { Post } = require("../model/Post");
+import Post from "../model/Post.js"
 
-exports.createPost = async (req, res) => {
+
+export const createPost = async (req, res) => {
   const post = new Post(req.body);
   if (!post.text && !post.image)
     return res.status(400).json({ msg: "cannot post empty post " });
@@ -13,7 +14,7 @@ exports.createPost = async (req, res) => {
   }
 };
 
-exports.getAllPostById = async (req, res) => {
+export const getAllPostById = async (req, res) => {
   const { userId } = req.params;
   if(userId != req.user.id) return res.status(400).json({msg : "do your work only"})
   try {
@@ -24,7 +25,7 @@ exports.getAllPostById = async (req, res) => {
   }
 };
 
-exports.deletePostById = async (req, res) => {
+export const deletePostById = async (req, res) => {
   const user = req.user;
   const { id } = req.params;
   try {
@@ -39,51 +40,63 @@ exports.deletePostById = async (req, res) => {
   }
 };
 
-exports.likeUnlikePost = async (req, res) => {
-  const user = req.user;
-  const { id } = req.params;
+export const likeUnlikePost = async (req, res) => {
+	try {
+		const { id: postId } = req.params;
+		const userId = req.user._id;
 
-  try {
-    const post = await Post.findById(id);
-    const isLike = post.likes.includes(user.id);
-    if (isLike) {
-      const doc = await Post.findByIdAndUpdate(id, {
-        $pull: { likes: user.id },
-      });
-      res.status(200).json({ msg: "unliked succesfully" });
-    } else {
-      const doc = await Post.findByIdAndUpdate(id, {
-        $push: { likes: user.id },
-      });
-      res.status(200).json({ msg: "liked succesfully" });
-    }
-  } catch (err) {
-    res.status(400).json({ msg: err.msg });
-  }
+		const post = await Post.findById(postId);
+
+		if (!post) {
+			return res.status(404).json({ error: "Post not found" });
+		}
+
+		const userLikedPost = post.likes.includes(userId);
+
+		if (userLikedPost) {
+			// Unlike post
+			await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
+			res.status(200).json({ message: "Post unliked successfully" });
+		} else {
+			// Like post
+			post.likes.push(userId);
+			await post.save();
+			res.status(200).json({ message: "Post liked successfully" });
+		}
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
 };
 
-exports.comment = async (req, res) => {
-    const postId =  req.params.id;
-    const commenterId = req.user.id;
-    const text = req.body.text;
+export const comment = async (req, res) => {
+	try {
+		const { text } = req.body;
+		const postId = req.params.id;
+		const userId = req.user._id;
+		const userProfilePic = req.user.profilePic;
+		const username = req.user.username;
 
-    if(!text) return res.status(400).json({msg : "empty comment"})
-    const username = req.user.username;
-    const commenterImage = req.user.profilePic;
-    try {
-        const comment = {commenterId , username , text , commenterImage};
-        const post =await Post.findById(postId);
-        if(!post)return  res.status(400).json({msg : "post not found"});
-        post.comments.push(comment);
-        const doc = await post.save();
-        res.status(200).json({msg :"commented successfully"})
+		if (!text) {
+			return res.status(400).json({ error: "Text field is required" });
+		}
 
-    } catch (err) {
-        res.json(401).json({msg : err.message})
-    }
+		const post = await Post.findById(postId);
+		if (!post) {
+			return res.status(404).json({ error: "Post not found" });
+		}
+
+		const reply = { userId, text, userProfilePic, username };
+
+		post.replies.push(reply);
+		await post.save();
+
+		res.status(200).json(reply);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
 };
 
-exports.getFeedPost =async  (req  , res ) => {
+export const getFeedPost =async  (req  , res ) => {
     const id = req.user.id;
     const  following = req.user.following;
 

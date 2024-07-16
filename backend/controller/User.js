@@ -1,8 +1,7 @@
-const { User } = require("../model/User");
-const bcrypt = require("bcrypt");
-
-exports.getUser = async (req, res) => {
-  const { id } = req.params;
+import  User  from "../model/User.js";
+import bcrypt from "bcrypt"
+export const getUser = async (req, res) => {
+  const id = req.params.id;
   try {
     const user = await User.findById(id)
       .select("-password")
@@ -23,43 +22,38 @@ exports.getUser = async (req, res) => {
   }
 };
 
-exports.followUnfollowUser = async (req, res) => {
-  const id  = req.params.id;
-  const currentUser = await User.findById(req.user.id);
-  try {
-    const user = await User.findById(id);
-    if (toString(currentUser.id) === id) {
-      return res.status(400).json({ msg: "you cannot follow youself" });
-    }
+const followUnFollowUser = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const userToModify = await User.findById(id);
+		const currentUser = await User.findById(req.user._id);
 
-    if (!user || !currentUser) {
-      return res.status(400).json({ msg: "user not found" });
-    }
+		if (id === req.user._id.toString())
+			return res.status(400).json({ error: "You cannot follow/unfollow yourself" });
 
-    const isFollowing = currentUser.following.includes(id);
-    if (isFollowing) {
-      await User.findByIdAndUpdate(currentUser.id, {
-        $pull: { following: id },
-      });
-      await User.findByIdAndUpdate(id, {
-        $pull: { followers: currentUser.id },
-      });
-      res.status(201).json({ msg: "unfollowed succesfully" });
-    } else {
-      await User.findByIdAndUpdate(currentUser.id, {
-        $push: { following: req.params.id },
-      });
-      await User.findByIdAndUpdate(req.params.id, {
-        $push: { followers: currentUser.id },
-      });
-      res.status(201).json({ msg: "followed succesfully" });
-    }
-  } catch (err) {
-    res.status(400).json({ msg: err.message });
-  }
+		if (!userToModify || !currentUser) return res.status(400).json({ error: "User not found" });
+
+		const isFollowing = currentUser.following.includes(id);
+
+		if (isFollowing) {
+			// Unfollow user
+			await User.findByIdAndUpdate(id, { $pull: { followers: req.user._id } });
+			await User.findByIdAndUpdate(req.user._id, { $pull: { following: id } });
+			res.status(200).json({ message: "User unfollowed successfully" });
+		} else {
+			// Follow user
+			await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } });
+			await User.findByIdAndUpdate(req.user._id, { $push: { following: id } });
+			res.status(200).json({ message: "User followed successfully" });
+		}
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+		console.log("Error in followUnFollowUser: ", err.message);
+	}
 };
 
-exports.updateUser = async (req, res) => {
+
+export const updateUser  = async (req, res) => {
   const { email, name, password, bio, profilePic, username } = req.body;
   if (req.params.id !== req.user.id.toString())
     return res.status(201).json({ msg: "bad request" });

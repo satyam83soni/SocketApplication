@@ -1,8 +1,8 @@
-const { User } = require("../model/User");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+import  User from "../model/User.js";
+import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt"
 
-exports.createUser = async (req, res) => {
+export const createUser = async (req, res) => {
   const user = new User(req.body);
   const token = jwt.sign({ username: req.body.username }, process.env.SECRET, {
     expiresIn: "15d",
@@ -29,7 +29,7 @@ exports.createUser = async (req, res) => {
   }
 };
 
-exports.loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
   const user = await User.findOne({ username: req.body.username });
   if (!user) {
     return res.status(401).json({ msg: "Please create an account" });

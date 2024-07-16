@@ -1,16 +1,15 @@
-const express = require("express");
-const isAuth = require('../utils/Protected')
+import express from "express";
 const router = express.Router();
 
-const {
+import  {
   getUser,
   followUnfollowUser,
   updateUser,
-} = require("../controller/User");
+}  from "../controller/User.js";
 
 router
   .get("/getUser/:id", getUser)
   .post("/follow/:id", followUnfollowUser)
   .patch("/update/:id", updateUser);
 
-exports.router = router;
+export default router;
